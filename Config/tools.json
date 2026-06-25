@@ -1,0 +1,65 @@
+[
+    {
+        "Name": "文件重命名",
+        "Icon": "📝",
+        "Category": "文件工具",
+        "Script": "FileRename.ps1",
+        "Description": "批量重命名文件，支持查找替换、正则表达式、添加前缀后缀等"
+    },
+    {
+        "Name": "文件搜索",
+        "Icon": "🔍",
+        "Category": "文件工具",
+        "Script": "FileSearch.ps1",
+        "Description": "基于 Everything CLI 的毫秒级文件搜索，支持关键词、路径、类型过滤"
+    },
+    {
+        "Name": "文件分类整理",
+        "Icon": "📂",
+        "Category": "文件工具",
+        "Script": "FileClassifier.ps1",
+        "Description": "按扩展名、日期、大小等规则自动分类整理文件"
+    },
+    {
+        "Name": "系统信息",
+        "Icon": "💻",
+        "Category": "系统工具",
+        "Script": "SystemInfo.ps1",
+        "Description": "查看系统详细信息：CPU、内存、磁盘、网络、操作系统版本等"
+    },
+    {
+        "Name": "进程管理",
+        "Icon": "📊",
+        "Category": "系统工具",
+        "Script": "ProcessManager.ps1",
+        "Description": "查看和管理系统运行中的进程"
+    },
+    {
+        "Name": "网络检测",
+        "Icon": "🌐",
+        "Category": "网络工具",
+        "Script": "NetworkCheck.ps1",
+        "Description": "Ping 检测、端口扫描、路由追踪等网络诊断工具"
+    },
+    {
+        "Name": "文本处理",
+        "Icon": "📄",
+        "Category": "文本工具",
+        "Script": "TextProcessor.ps1",
+        "Description": "文本编码转换、行排序去重、正则查找替换等"
+    },
+    {
+        "Name": "音视频处理",
+        "Icon": "🎬",
+        "Category": "媒体工具",
+        "Script": "audioVedioTools.ps1",
+        "Description": "提取音频，按时间段批量提取视频片段，支持 ffplay 预览"
+    },
+    {
+        "Name": "进程快照",
+        "Icon": "💻",
+        "Category": "系统工具",
+        "Script": "WindowLayout.ps1",
+        "Description": "恢复当前系统进程"
+    }
+]

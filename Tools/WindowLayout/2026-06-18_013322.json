@@ -1,0 +1,460 @@
+﻿{
+    "Windows":  [
+                    {
+                        "Y":  166,
+                        "Height":  700,
+                        "State":  "正常",
+                        "X":  460,
+                        "Monitor":  "未知",
+                        "ProcessName":  "powershell",
+                        "Width":  1000,
+                        "Title":  "Gemini",
+                        "ExePath":  "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                    },
+                    {
+                        "Y":  64,
+                        "Height":  222,
+                        "State":  "正常",
+                        "X":  0,
+                        "Monitor":  "未知",
+                        "ProcessName":  "BaiduNetdiskUnite",
+                        "Width":  320,
+                        "Title":  "百度网盘",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Roaming\\baidu\\BaiduNetdisk\\module\\BrowserEngine\\BaiduNetdiskUnite.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "MySQLWorkbench",
+                        "Width":  160,
+                        "Title":  "MySQL Workbench",
+                        "ExePath":  "C:\\Applications\\mysql_workbench\\MySQLWorkbench.exe"
+                    },
+                    {
+                        "Y":  0,
+                        "Height":  10,
+                        "State":  "正常",
+                        "X":  0,
+                        "Monitor":  "未知",
+                        "ProcessName":  "BaiduNetdisk",
+                        "Width":  10,
+                        "Title":  "dummyLayeredWnd",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Roaming\\baidu\\BaiduNetdisk\\BaiduNetdisk.exe"
+                    },
+                    {
+                        "Y":  0,
+                        "Height":  10,
+                        "State":  "正常",
+                        "X":  0,
+                        "Monitor":  "未知",
+                        "ProcessName":  "BaiduNetdisk",
+                        "Width":  10,
+                        "Title":  "dummyLayeredWnd",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Roaming\\baidu\\BaiduNetdisk\\BaiduNetdisk.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "WindowsTerminal",
+                        "Width":  160,
+                        "Title":  "Windows PowerShell",
+                        "ExePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.18.10301.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "mintty",
+                        "Width":  160,
+                        "Title":  "MINGW64:/c/FTP_Server/JOS@/Projects/JSProjects/min",
+                        "ExePath":  "C:\\Program Files\\Git\\usr\\bin\\mintty.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "KeePassXC",
+                        "Width":  160,
+                        "Title":  "myPassWord.kdbx [锁定] - KeePassXC",
+                        "ExePath":  null
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "chrome",
+                        "Width":  160,
+                        "Title":  "网盘资源避难所-综合网盘资源站 - Google Chrome",
+                        "ExePath":  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "trilliongame_Balatro - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "Milky Way - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "WindowsTerminal",
+                        "Width":  160,
+                        "Title":  "Windows PowerShell",
+                        "ExePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.18.10301.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "WindowsTerminal",
+                        "Width":  160,
+                        "Title":  "Windows PowerShell",
+                        "ExePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.18.10301.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "奔驰 - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Obsidian",
+                        "Width":  160,
+                        "Title":  "FLASH 转HTML - 工作 - Obsidian 1.12.7",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Programs\\obsidian\\Obsidian.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "WindowsTerminal",
+                        "Width":  160,
+                        "Title":  "Windows PowerShell",
+                        "ExePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.18.10301.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Postman",
+                        "Width":  160,
+                        "Title":  "查询车辆sacode - kiramario\u0027s Workspace",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Postman\\app-12.14.5\\Postman.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "The_Powder_Toy_Game - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Obsidian",
+                        "Width":  160,
+                        "Title":  "Linux脚本笔记 - 博客 - Obsidian 1.12.7",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Programs\\obsidian\\Obsidian.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Obsidian",
+                        "Width":  160,
+                        "Title":  "Docker - localBasic - Obsidian 1.12.7",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Programs\\obsidian\\Obsidian.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Weixin",
+                        "Width":  160,
+                        "Title":  "微信",
+                        "ExePath":  "C:\\Program Files\\Tencent\\Weixin\\Weixin.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "chrome",
+                        "Width":  160,
+                        "Title":  "New API - Google Chrome",
+                        "ExePath":  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "ShareX",
+                        "Width":  160,
+                        "Title":  "ShareX 17.1 Portable",
+                        "ExePath":  "E:\\portable\\PortableApps\\ShareXPortable\\App\\ShareX\\ShareX.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Tabby",
+                        "Width":  160,
+                        "Title":  "Thinkpad-E50",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Programs\\Tabby\\Tabby.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "SSRDOG",
+                        "Width":  160,
+                        "Title":  "SSRDOG",
+                        "ExePath":  "C:\\Applications\\ssrdog\\SSRDOG.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "prompts.txt - 江苏昇迪凡科技术有限公司 - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Notepad",
+                        "Width":  160,
+                        "Title":  "评价依据.txt - Notepad",
+                        "ExePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsNotepad_11.2402.22.0_x64__8wekyb3d8bbwe\\Notepad\\Notepad.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "PortableAppsPlatform",
+                        "Width":  160,
+                        "Title":  "PortableApps.com Platform",
+                        "ExePath":  "E:\\portable\\PortableApps\\PortableApps.com\\PortableAppsPlatform.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "msedge",
+                        "Width":  160,
+                        "Title":  "方舟Claw众测 和另外 259 个页面 - 个人 - Microsoft​ Edge",
+                        "ExePath":  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "msedge",
+                        "Width":  160,
+                        "Title":  "【魔兽争霸3冰封王座】魔兽争霸3冰封王座下载 中文绿色版-ZOL软件下载 和另外 22 个页面 - 个人 - Microsoft​ Edge",
+                        "ExePath":  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Code",
+                        "Width":  160,
+                        "Title":  "● daily_search.ipynb - python_demo - Visual Studio Code",
+                        "ExePath":  "C:\\Applications\\VSCode\\Microsoft VS Code\\Code.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "mintty",
+                        "Width":  160,
+                        "Title":  "MINGW64:/c/FTP_Server/JOS@/数据黑工/江苏昇迪凡科技术有限公司/20260616/task3",
+                        "ExePath":  "C:\\Program Files\\Git\\usr\\bin\\mintty.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "CodeBuddy CN",
+                        "Width":  160,
+                        "Title":  "docker-compose.yml - new-api - CodeBuddy CN",
+                        "ExePath":  "C:\\Applications\\CodeBuddy\\CodeBuddy CN\\CodeBuddy CN.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "notepad",
+                        "Width":  160,
+                        "Title":  "C:\\FTP_Server\\JOS@\\数据黑工\\江苏昇迪凡科技术有限公司\\20260616\\task2\\sigma\\out_res\\booking-automation\\run.py - Notepad++",
+                        "ExePath":  "C:\\Notepad++_3.2.3\\notepad.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "quark",
+                        "Width":  160,
+                        "Title":  "夸克网盘 - 夸克",
+                        "ExePath":  "C:\\Users\\zhangyang\\AppData\\Local\\Programs\\Quark\\quark.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "mintty",
+                        "Width":  160,
+                        "Title":  "MINGW64:/c/FTP_Server/JOS@/Projects/LuaProjects/romwe_game",
+                        "ExePath":  "C:\\Program Files\\Git\\usr\\bin\\mintty.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Code",
+                        "Width":  160,
+                        "Title":  "config.lua - romwe_game - Visual Studio Code",
+                        "ExePath":  "C:\\Applications\\VSCode\\Microsoft VS Code\\Code.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Code",
+                        "Width":  160,
+                        "Title":  "账号_环境地址.md - 奔驰 - Visual Studio Code",
+                        "ExePath":  "C:\\Applications\\VSCode\\Microsoft VS Code\\Code.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Code",
+                        "Width":  160,
+                        "Title":  "README_BUILD.md - trilliongame_Balatro - Visual Studio Code",
+                        "ExePath":  "C:\\Applications\\VSCode\\Microsoft VS Code\\Code.exe"
+                    },
+                    {
+                        "Y":  -32000,
+                        "Height":  28,
+                        "State":  "最小化",
+                        "X":  -32000,
+                        "Monitor":  "未知",
+                        "ProcessName":  "Code",
+                        "Width":  160,
+                        "Title":  "Main.ps1 - Gemini - Visual Studio Code",
+                        "ExePath":  "C:\\Applications\\VSCode\\Microsoft VS Code\\Code.exe"
+                    }
+                ],
+    "Name":  "2026-06-18_013322",
+    "ScreenInfo":  [
+                       {
+                           "WorkingArea":  "0,0,1920,1032",
+                           "Primary":  true,
+                           "DeviceName":  "\\\\.\\DISPLAY1",
+                           "Bounds":  "0,0,1920,1080"
+                       },
+                       {
+                           "WorkingArea":  "-900,9,900,1552",
+                           "Primary":  false,
+                           "DeviceName":  "\\\\.\\DISPLAY2",
+                           "Bounds":  "-900,9,900,1600"
+                       }
+                   ],
+    "CreatedAt":  "2026-06-18 01:33:22"
+}
