@@ -17,7 +17,6 @@ $script:ToolsDir = Join-Path $PSScriptRoot "Tools"
 $script:ThemeFile = Join-Path $PSScriptRoot "Config\theme.json"
 $script:CurrentTheme = "Light"  # 默认主题
 $Global:MainWindow = $null
-$Global:MainOutputLog = $null
 $Global:CurrentTheme = "Light"  # 供工具脚本读取
 $Global:GeminiRootDir = $PSScriptRoot
 $Global:GeminiToolsDir = $script:ToolsDir
@@ -26,31 +25,31 @@ $Global:GeminiToolsDir = $script:ToolsDir
 $script:Themes = @{
     "Light"    = @{
         HeaderBg = "#2D2D30"; SidebarBg = "#252526"; ContentBg = "#F0F0F0"
-        OutputBg = "#1E1E1E"; CardBg = "#FFFFFF"; TextPrimary = "#333333"
-        TextMuted = "#888888"; BorderColor = "#CCCCCC"; LogTitleBg = "#2A2A2E"
+        CardBg = "#FFFFFF"; TextPrimary = "#333333"
+        TextMuted = "#888888"; BorderColor = "#CCCCCC"
         SearchBg = "#3E3E42"; TreeParentFg = "#333333"; TreeChildFg = "#555555"
-        BtnToggleFg = "#AAAAAA"; Accent = "#0078D4"
+        Accent = "#0078D4"
     }
     "Dark"     = @{
         HeaderBg = "#1E1E1E"; SidebarBg = "#252526"; ContentBg = "#2D2D30"
-        OutputBg = "#1A1A1A"; CardBg = "#3C3C3C"; TextPrimary = "#D4D4D4"
-        TextMuted = "#888888"; BorderColor = "#555555"; LogTitleBg = "#333333"
+        CardBg = "#3C3C3C"; TextPrimary = "#D4D4D4"
+        TextMuted = "#888888"; BorderColor = "#555555"
         SearchBg = "#3C3C3C"; TreeParentFg = "#FFFFFF"; TreeChildFg = "#CCCCCC"
-        BtnToggleFg = "#CCCCCC"; Accent = "#0078D4"
+        Accent = "#0078D4"
     }
     "DeepBlue" = @{
         HeaderBg = "#1B2838"; SidebarBg = "#152232"; ContentBg = "#1E2D3D"
-        OutputBg = "#131E2A"; CardBg = "#253545"; TextPrimary = "#D4D4D4"
-        TextMuted = "#6A8AAA"; BorderColor = "#3A5568"; LogTitleBg = "#1A2A3A"
+        CardBg = "#253545"; TextPrimary = "#D4D4D4"
+        TextMuted = "#6A8AAA"; BorderColor = "#3A5568"
         SearchBg = "#253545"; TreeParentFg = "#FFFFFF"; TreeChildFg = "#AABBCC"
-        BtnToggleFg = "#AABBCC"; Accent = "#4A90D9"
+        Accent = "#4A90D9"
     }
     "Warm"     = @{
         HeaderBg = "#3D2E1E"; SidebarBg = "#332618"; ContentBg = "#FFF8F0"
-        OutputBg = "#2A1F14"; CardBg = "#FFFDFA"; TextPrimary = "#5C3D2E"
-        TextMuted = "#A08060"; BorderColor = "#D4B896"; LogTitleBg = "#3D2E1E"
+        CardBg = "#FFFDFA"; TextPrimary = "#5C3D2E"
+        TextMuted = "#A08060"; BorderColor = "#D4B896"
         SearchBg = "#4A3828"; TreeParentFg = "#FFFFFF"; TreeChildFg = "#E8D5C0"
-        BtnToggleFg = "#D4B896"; Accent = "#D4764E"
+        Accent = "#D4764E"
     }
 }
 
@@ -70,19 +69,13 @@ function Apply-Theme {
         $c.FindName("RootBorder").Background = $t2b.ConvertFromString($t.ContentBg)
         $c.FindName("HeaderBorder").Background = $t2b.ConvertFromString($t.HeaderBg)
         $c.FindName("SidebarBorder").Background = $t2b.ConvertFromString($t.SidebarBg)
-        $c.FindName("OutputBorder").Background = $t2b.ConvertFromString($t.OutputBg)
-        $c.FindName("LogTitleBorder").Background = $t2b.ConvertFromString($t.LogTitleBg)
         $c.FindName("SearchBorder").Background = $t2b.ConvertFromString($t.SearchBg)
-        $c.FindName("Splitter").Background = $t2b.ConvertFromString($t.BorderColor)
-        $c.FindName("OutputLog").Background = $t2b.ConvertFromString($t.OutputBg)
 
         # 欢迎页
         $wt = $c.FindName("WelcomeTitle")
         if ($wt) { $wt.Foreground = $t2b.ConvertFromString($t.TextPrimary) }
         $ws = $c.FindName("WelcomeSubtitle")
         if ($ws) { $ws.Foreground = $t2b.ConvertFromString($t.TextMuted) }
-        $tb = $c.FindName("BtnToggleOutput")
-        if ($tb) { $tb.Foreground = $t2b.ConvertFromString($t.BtnToggleFg) }
 
         # 欢迎卡片递归染色
         Theme-WelcomeCards $c.FindName("WelcomePanel") $t
@@ -266,9 +259,7 @@ function Set-Tool {
     
     # 加载工具脚本
     $scriptPath = Join-Path $script:ToolsDir $ToolConfig.Script
-    # if ($ToolConfig.Name -eq "进程快照") {
-    #     $scriptPath = Join-Path $script:ToolsDir "_diag_v3.ps1"
-    # }
+
     $embeddedScript = $null
     if ($script:EmbeddedToolsB64 -and $script:EmbeddedToolsB64.ContainsKey($ToolConfig.Script)) {
         $scriptBytes = [Convert]::FromBase64String($script:EmbeddedToolsB64[$ToolConfig.Script])
@@ -283,9 +274,11 @@ function Set-Tool {
         # 动态执行工具脚本，脚本内部通过 $Global:MainWindow 获取窗口引用
         # 脚本应返回一个 UIElement 或定义自己的 UI
         if ($embeddedScript) {
+            Write-Log "[Set-Tool] embeddedScript: $embeddedScript" -Type Info
             $result = . ([ScriptBlock]::Create($embeddedScript))
         }
         else {
+            Write-Log "[Set-Tool] scriptPath: $scriptPath" -Type Info
             $result = . $scriptPath
         }
         
@@ -309,40 +302,32 @@ function Set-Tool {
 function Write-Log {
     param(
         [string]$Message,
-        [ValidateSet("Info", "Warning", "Error", "Success")]
+        [ValidateSet("Info", "Warning", "Error", "Success", "Cmd")]
         [string]$Type = "Info"
     )
-    
+
     $timestamp = Get-Date -Format "HH:mm:ss"
-    $prefix = switch ($Type) {
-        "Info" { "📄" }
-        "Warning" { "⚠️" }
-        "Error" { "❌" }
-        "Success" { "✅" }
+    $tag = switch ($Type) {
+        "Info" { "INFO" }
+        "Warning" { "WARN" }
+        "Error" { "ERROR" }
+        "Success" { "OK" }
+        "Cmd" { "CMD" }
     }
-    
-    $line = "[$timestamp] $prefix $Message"
-    
-    $logBox = $Global:MainOutputLog
-    if ($logBox) {
-        $logBox.Dispatcher.Invoke([Action] {
-                $paragraph = [System.Windows.Documents.Paragraph]::new()
-                $run = [System.Windows.Documents.Run]::new($line)
-            
-                switch ($Type) {
-                    "Warning" { $run.Foreground = "#E8B830" }
-                    "Error" { $run.Foreground = "#E81123" }
-                    "Success" { $run.Foreground = "#16C60C" }
-                    default { $run.Foreground = "#D4D4D4" }
-                }
-            
-                $paragraph.Inlines.Add($run)
-                $logBox.Document.Blocks.Add($paragraph)
-                $logBox.ScrollToEnd()
-            })
+
+    $line = "[$timestamp] [$tag] $Message"
+
+    # 写入 _logs/Main_yyyyMMdd.log (按天分文件,追加模式)
+    if (-not $script:MainLogFile) {
+        $script:MainLogDir = Join-Path $Global:GeminiRootDir '_logs'
+        if (-not (Test-Path -LiteralPath $script:MainLogDir)) {
+            New-Item -Path $script:MainLogDir -ItemType Directory -Force | Out-Null
+        }
+        $script:MainLogFile = Join-Path $script:MainLogDir ('Main_' + (Get-Date -Format 'yyyyMMdd') + '.log')
     }
-    
-    # 同时输出到控制台
+    Add-Content -LiteralPath $script:MainLogFile -Value $line -Encoding UTF8
+
+    # 同时输出到控制台(开发/调试用)
     Write-Host $line
 }
 
@@ -484,40 +469,7 @@ function Register-Events {
             }
             Find-Tools -Window $Window -Keyword $searchBox.Text
         })
-    
-    # 输出日志切换
-    $btnToggle = $Window.FindName("BtnToggleOutput")
-    $outputRow = $Window.FindName("OutputRow")
-    $splitter = $Window.FindName("Splitter")
-    $btnToggle.Add_Click({
-            if ($btnToggle.IsChecked) {
-                $outputRow.Height = [System.Windows.GridLength]::new(180)
-                $splitter.Visibility = [System.Windows.Visibility]::Visible
-            }
-            else {
-                $outputRow.Height = [System.Windows.GridLength]::new(0)
-                $splitter.Visibility = [System.Windows.Visibility]::Collapsed
-            }
-        })
-    
-    # 清空日志
-    $btnClearLog = $Window.FindName("BtnClearLog")
-    $btnClearLog.Add_Click({
-            $logBox = $Window.FindName("OutputLog")
-            $logBox.Document.Blocks.Clear()
-        })
-    
-    # 复制日志
-    $btnCopyLog = $Window.FindName("BtnCopyLog")
-    $btnCopyLog.Add_Click({
-            $logBox = $Window.FindName("OutputLog")
-            $text = [System.Windows.Documents.TextRange]::new(
-                $logBox.Document.ContentStart,
-                $logBox.Document.ContentEnd
-            ).Text
-            [System.Windows.Clipboard]::SetText($text)
-        })
-    
+
     # 主题切换（$args[0] = ComboBox 自身）
     $cmbTheme = $Window.FindName("CmbTheme")
     $cmbTheme.Add_DropDownClosed({
@@ -604,7 +556,6 @@ function Main {
     
     $window = Import-Xaml -Path $script:XamlPath
     $Global:MainWindow = $window
-    $Global:MainOutputLog = $window.FindName("OutputLog")
     
     # 加载配置
     $configs = Import-ToolConfigs

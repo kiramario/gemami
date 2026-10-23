@@ -10,7 +10,6 @@
         <SolidColorBrush x:Key="HeaderBg" Color="#2D2D30"/>
         <SolidColorBrush x:Key="SidebarBg" Color="#252526"/>
         <SolidColorBrush x:Key="ContentBg" Color="#F0F0F0"/>
-        <SolidColorBrush x:Key="OutputBg" Color="#1E1E1E"/>
         <SolidColorBrush x:Key="AccentColor" Color="#0078D4"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#333333"/>
         <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
@@ -104,21 +103,9 @@
             <!-- ========== 左侧导航 ========== -->
             <Border x:Name="SidebarBorder" DockPanel.Dock="Left" Width="220" Background="{StaticResource SidebarBg}">
                 <Grid Margin="0,10,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    
                     <TreeView x:Name="ToolTree" Background="Transparent" 
                               BorderThickness="0" Margin="5,0">
                     </TreeView>
-                    
-                    <!-- 底部输出切换按钮 -->
-                    <ToggleButton x:Name="BtnToggleOutput" Grid.Row="1" 
-                                  Content="📋 输出日志" Height="35"
-                                  Background="Transparent" Foreground="#AAAAAA"
-                                  BorderThickness="0" Cursor="Hand"
-                                  IsChecked="True"/>
                 </Grid>
             </Border>
             
@@ -126,8 +113,6 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="5"/>
-                    <RowDefinition x:Name="OutputRow" Height="180"/>
                 </Grid.RowDefinitions>
                 
                 <!-- 工具内容展示区 -->
@@ -192,46 +177,6 @@
                         </WrapPanel>
                     </StackPanel>
                 </ContentControl>
-                
-                <!-- 拖拽分割条 -->
-                <GridSplitter x:Name="Splitter" Grid.Row="1" Height="5" 
-                              HorizontalAlignment="Stretch" Background="{StaticResource BorderColor}"
-                              Cursor="SizeNS"/>
-                
-                <!-- ========== 底部输出日志 ========== -->
-                <Border x:Name="OutputBorder" Grid.Row="2" Background="{StaticResource OutputBg}" CornerRadius="0,0,8,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="28"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <!-- 日志标题栏 -->
-                        <Border x:Name="LogTitleBorder" Background="#2A2A2E">
-                            <Grid>
-                                <TextBlock Text="📋 输出日志" Foreground="#AAAAAA" 
-                                           FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,10,0">
-                                    <Button x:Name="BtnClearLog" Content="清空" Width="50" Height="22"
-                                            Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                            FontSize="11" Cursor="Hand" Margin="0,0,5,0"/>
-                                    <Button x:Name="BtnCopyLog" Content="复制" Width="50" Height="22"
-                                            Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                            FontSize="11" Cursor="Hand"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        
-                        <!-- 日志内容 -->
-                        <RichTextBox x:Name="OutputLog" Grid.Row="1" 
-                                     Background="{StaticResource OutputBg}" 
-                                     Foreground="#D4D4D4"
-                                     FontFamily="Consolas" FontSize="12"
-                                     BorderThickness="0" IsReadOnly="True"
-                                     VerticalScrollBarVisibility="Auto"
-                                     Margin="8,0"/>
-                    </Grid>
-                </Border>
             </Grid>
         </DockPanel>
     </Border>

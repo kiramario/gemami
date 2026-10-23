@@ -56,6 +56,13 @@
         "Description": "提取音频，按时间段批量提取视频片段，支持 ffplay 预览"
     },
     {
+        "Name": "批量解压",
+        "Icon": "🗜️",
+        "Category": "文件工具",
+        "Script": "ArchiveBatchExtract.ps1",
+        "Description": "批量解压文件夹内所有压缩文件，支持多密码逐个尝试，可指定输出路径"
+    },
+    {
         "Name": "进程快照",
         "Icon": "💻",
         "Category": "系统工具",

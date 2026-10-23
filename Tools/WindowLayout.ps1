@@ -7,6 +7,32 @@
 
 Add-Type -AssemblyName PresentationFramework, System.Windows.Forms, System.Drawing
 
+# ---------- 独立模式 Write-ToolLog fallback ----------
+# 被 Main.ps1 dot-source 加载时,Main.ps1 已定义 Global:Write-ToolLog(写入全局 OutputLog)
+# 单独跑这个脚本时,退化到写文件 _logs/WindowLayout_yyyyMMdd.log
+if (-not (Get-Command Write-ToolLog -ErrorAction SilentlyContinue)) {
+    $script:SmLogBase = if ($Global:GeminiToolsDir) { $Global:GeminiToolsDir }
+                        elseif ($PSScriptRoot) { $PSScriptRoot }
+                        else { $PWD.Path }
+    $script:SmLogDir = Join-Path $script:SmLogBase '_logs'
+    if (-not (Test-Path -LiteralPath $script:SmLogDir)) {
+        New-Item -Path $script:SmLogDir -ItemType Directory -Force | Out-Null
+    }
+    $script:SmLogFile = Join-Path $script:SmLogDir ('WindowLayout_' + (Get-Date -Format 'yyyyMMdd') + '.log')
+
+    function Global:Write-ToolLog {
+        param([string]$Message, [string]$Type = "Info")
+        $ts = (Get-Date).ToString('HH:mm:ss')
+        $tag = switch ($Type) {
+            'Warning' { 'WARN'  }
+            'Error'   { 'ERROR' }
+            'Success' { 'OK'    }
+            default   { 'INFO'  }
+        }
+        Add-Content -LiteralPath $script:SmLogFile -Value "[$ts] [$tag] $Message" -Encoding UTF8
+    }
+}
+
 # ---------- Win32 API 声明 ----------
 $win32Code = @'
 using System;
@@ -101,7 +127,6 @@ $xaml = @'
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
     <!-- 标题 -->
@@ -175,14 +200,6 @@ $xaml = @'
                      Margin="12,0" Foreground="#0E639C" Background="#2D2D2D" BorderBrush="#555"/>
         <TextBlock Grid.Column="2" x:Name="TxtCount" Foreground="#888" VerticalAlignment="Center" Text="共 0 个窗口"/>
     </Grid>
-
-    <!-- 日志 -->
-    <Border Grid.Row="5" Background="#1A1A1A" CornerRadius="4" Height="120">
-        <TextBox x:Name="OutputLog" Background="#1A1A1E" Foreground="#D4D4D4"
-                 BorderThickness="0" IsReadOnly="True"
-                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                 TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"/>
-    </Border>
 </Grid>
 '@
 
@@ -204,7 +221,6 @@ $script:chkRelaunch      = $ui.FindName("ChkRelaunch")
 $script:txtStatus         = $ui.FindName("TxtStatus")
 $script:pgbProgress      = $ui.FindName("PgbProgress")
 $script:txtCount         = $ui.FindName("TxtCount")
-$script:outputLog        = $ui.FindName("OutputLog")
 
 # ---------- 初始化 ----------
 if (-not (Test-Path $script:ConfigDir)) {
@@ -291,22 +307,13 @@ function Get-AllVisibleWindows {
     return $windows
 }
 
-function Write-Log {
+# 委托给 Write-ToolLog: 嵌入模式(Main.ps1 加载)→ 全局 OutputLog
+#                       独立模式 → _logs/WindowLayout_yyyyMMdd.log (见顶部 fallback)
+# 注意: 函数名不能用 Write-Log, 否则 dot-source 加载时会覆盖 Main.ps1 的同名全局函数,
+#       导致 Write-ToolLog -> Write-Log -> Write-ToolLog 无限递归 (CallDepthOverflow)。
+function Write-WlLog {
     param([string]$Message, [string]$Type = "Info")
-    $time = Get-Date -Format "HH:mm:ss"
-    $line = "[$time] $Message`r`n"
-
-    if ($script:outputLog.Dispatcher.CheckAccess()) {
-        $script:outputLog.AppendText($line)
-        $script:outputLog.ScrollToEnd()
-    }
-    else {
-        $script:outputLog.Dispatcher.Invoke([Action] {
-            $script:outputLog.AppendText($line)
-            $script:outputLog.ScrollToEnd()
-        })
-    }
-    Write-Host $line.TrimEnd()
+    Write-ToolLog $Message $Type
 }
 
 # ---------- 扫描窗口 ----------
@@ -656,7 +663,7 @@ try {
     $script:fnDeleteSnapshot    = ${function:Delete-Snapshot}
     $script:fnRefreshSnapshots  = ${function:Refresh-Snapshots}
     $script:fnExportImport      = ${function:ExportImport-Snapshot}
-    $script:fnWriteLog          = ${function:Write-Log}
+    $script:fnWriteLog          = ${function:Write-WlLog}
     $script:fnGetAllWindows     = ${function:Get-AllVisibleWindows}
     $script:fnRestoreWindowPos  = ${function:Restore-WindowPosition}
     $script:fnGetScreenInfo     = ${function:Get-ScreenInfo}

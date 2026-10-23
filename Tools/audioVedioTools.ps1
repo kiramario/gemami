@@ -13,6 +13,33 @@ $libDir = Join-Path $script:ScriptDir 'lib'
 try { Add-Type -Path (Join-Path $libDir 'Microsoft.WindowsAPICodePack.dll') } catch { }
 try { Add-Type -Path (Join-Path $libDir 'Microsoft.WindowsAPICodePack.Shell.dll') } catch { }
 
+# ---------- 独立模式 Write-ToolLog fallback ----------
+# 被 Main.ps1 dot-source 加载时,Main.ps1 已定义 Global:Write-ToolLog(写入全局 OutputLog)
+# 单独跑这个脚本时,退化到写文件 _logs/audioVedioTools_yyyyMMdd.log
+if (-not (Get-Command Write-ToolLog -ErrorAction SilentlyContinue)) {
+    $script:SmLogBase = if ($Global:GeminiToolsDir) { $Global:GeminiToolsDir }
+                        elseif ($PSScriptRoot) { $PSScriptRoot }
+                        else { $PWD.Path }
+    $script:SmLogDir = Join-Path $script:SmLogBase '_logs'
+    if (-not (Test-Path -LiteralPath $script:SmLogDir)) {
+        New-Item -Path $script:SmLogDir -ItemType Directory -Force | Out-Null
+    }
+    $script:SmLogFile = Join-Path $script:SmLogDir ('audioVedioTools_' + (Get-Date -Format 'yyyyMMdd') + '.log')
+
+    function Global:Write-ToolLog {
+        param([string]$Message, [string]$Type = "Info")
+        $ts = (Get-Date).ToString('HH:mm:ss')
+        $tag = switch ($Type) {
+            'Warning' { 'WARN'  }
+            'Error'   { 'ERROR' }   
+            'Success' { 'OK'    }
+            'Cmd'     { 'CMD'   }
+            default   { 'INFO'  }
+        }
+        Add-Content -LiteralPath $script:SmLogFile -Value "[$ts] [$tag] $Message" -Encoding UTF8
+    }
+}
+
 # ---------- 脚本级变量 ----------
 $script:SelectedFile = $null
 $script:OutputDir = Join-Path $env:USERPROFILE "Desktop"
@@ -45,7 +72,21 @@ function Find-FFmpeg {
 # ---------- 时间格式转换 ----------
 function ConvertTo-Seconds {
     param([string]$TimeStr)
-    $TimeStr = $TimeStr.Trim()
+    $TimeStr = $TimeStr.Trim() -replace '：', ':'   # 兼容全角冒号
+    # 简写 (纯数字无冒号): 6位=HHMMSS, 4位=MMSS, 其余回退到下方按秒(可含小数)处理
+    if ($TimeStr -match '^(\d{6})$') {
+        $h = [double]$TimeStr.Substring(0, 2)
+        $m = [double]$TimeStr.Substring(2, 2)
+        $s = [double]$TimeStr.Substring(4, 2)
+        if ($m -ge 60 -or $s -ge 60) { throw "无效的时间简写: '$TimeStr'" }
+        return $h * 3600 + $m * 60 + $s
+    }
+    if ($TimeStr -match '^(\d{4})$') {
+        $m = [double]$TimeStr.Substring(0, 2)
+        $s = [double]$TimeStr.Substring(2, 2)
+        if ($m -ge 60 -or $s -ge 60) { throw "无效的时间简写: '$TimeStr'" }
+        return $m * 60 + $s
+    }
     if ($TimeStr -match '^(\d+):(\d+):(\d+(?:\.\d+)?)$') {
         return [double]$Matches[1] * 3600 + [double]$Matches[2] * 60 + [double]$Matches[3]
     }
@@ -84,7 +125,6 @@ $xaml = @'
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -158,11 +198,12 @@ $xaml = @'
         <Border Grid.Row="4" x:Name="PanelVideo" Background="#252525" CornerRadius="6" Padding="12,18" Margin="0,0,0,8" Visibility="Collapsed">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="40"/>
-                    <RowDefinition Height="180"/>
-                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="Auto"/>   <!-- 0: 时间输入 -->
+                    <RowDefinition Height="Auto"/>   <!-- 1: 比例设置 -->
+                    <RowDefinition Height="Auto"/>   <!-- 2: 输出格式 (新增) -->
+                    <RowDefinition Height="Auto"/>   <!-- 3: 快捷添加 -->
+                    <RowDefinition Height="180"/>    <!-- 4: 片段列表 -->
+                    <RowDefinition Height="40"/>     <!-- 5: 删除/清空 -->
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="0,0,0,6">
@@ -193,7 +234,8 @@ $xaml = @'
                             Height="26"
                             Background="#2D2D2D"
                             Foreground="#FFFFFF"
-                            BorderBrush="#555"/>
+                            BorderBrush="#555"
+                            ToolTip="时间格式: 00:07:17 或简写 000717 (6位=HHMMSS) / 0717 (4位=MMSS)，也支持全角冒号"/>
 
                     <TextBlock Grid.Row="0" Grid.Column="2"
                             Text="结束:"
@@ -207,7 +249,8 @@ $xaml = @'
                             Height="26"
                             Background="#2D2D2D"
                             Foreground="#FFFFFF"
-                            BorderBrush="#555"/>
+                            BorderBrush="#555"
+                            ToolTip="时间格式: 00:07:17 或简写 000717 (6位=HHMMSS) / 0717 (4位=MMSS)，也支持全角冒号"/>
 
                     <TextBlock Grid.Row="0" Grid.Column="4"
                             Text="输出名:"
@@ -256,7 +299,32 @@ $xaml = @'
                         IsChecked="True" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="16,0,0,0"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,6">
+                <!-- 输出格式 -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,6">
+                    <TextBlock Text="🎞 输出格式:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox x:Name="CmbOutputFormat" SelectedIndex="0" Height="26" Width="170"
+                            Background="#2D2D2D" Foreground="#000000" BorderBrush="#555">
+                        <ComboBoxItem Content="视频片段 (原格式)" Foreground="#000000"/>
+                        <ComboBoxItem Content="GIF 动图" Foreground="#000000"/>
+                    </ComboBox>
+                    <StackPanel x:Name="PanelGif" Orientation="Horizontal" Margin="14,0,0,0" Visibility="Collapsed">
+                        <TextBlock Text="尺寸:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <ComboBox x:Name="CmbGifPreset" SelectedIndex="1" Height="26" Width="100"
+                                Background="#2D2D2D" Foreground="#000000" BorderBrush="#555">
+                            <ComboBoxItem Content="小 (320×? · 8fps)" Foreground="#000000"/>
+                            <ComboBoxItem Content="中 (480×? · 10fps)" Foreground="#000000"/>
+                            <ComboBoxItem Content="大 (720×? · 12fps)" Foreground="#000000"/>
+                        </ComboBox>
+                        <TextBlock Text="宽度:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="10,0,4,0"/>
+                        <TextBox x:Name="TxtGifWidth" Text="480" Width="50" Height="26"
+                                Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#555" VerticalContentAlignment="Center"/>
+                        <TextBlock Text="帧率:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                        <TextBox x:Name="TxtGifFps" Text="10" Width="42" Height="26"
+                                Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#555" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,6">
                     <Button x:Name="BtnQuick1" Content="前5秒" Width="55" Height="22" Margin="0,0,6,0" Background="#3A3A3A" Foreground="#CCCCCC" BorderBrush="#555"/>
                     <Button x:Name="BtnQuick2" Content="前10秒" Width="60" Height="22" Margin="0,0,6,0" Background="#3A3A3A" Foreground="#CCCCCC" BorderBrush="#555"/>
                     <Button x:Name="BtnQuick3" Content="前30秒" Width="60" Height="22" Margin="0,0,6,0" Background="#3A3A3A" Foreground="#CCCCCC" BorderBrush="#555"/>
@@ -264,7 +332,7 @@ $xaml = @'
                     <Button x:Name="BtnQuick5" Content="末尾30秒" Width="70" Height="22" Background="#3A3A3A" Foreground="#CCCCCC" BorderBrush="#555"/>
                 </StackPanel>
 
-                <Border Grid.Row="3" Background="#1E1E1E" CornerRadius="4" Margin="0,0,0,6">
+                <Border Grid.Row="4" Background="#1E1E1E" CornerRadius="4" Margin="0,0,0,6">
                     <ListBox x:Name="LstRanges" Background="#1E1E1E" Foreground="#D4D4D4" BorderThickness="0" SelectionMode="Extended" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -276,7 +344,7 @@ $xaml = @'
                     </ListBox>
                 </Border>
 
-                <StackPanel Grid.Row="4" Orientation="Horizontal">
+                <StackPanel Grid.Row="5" Orientation="Horizontal">
                     <Button x:Name="BtnRemoveRange" Content="🗑 删除选中" Width="90" Height="24" Background="#555" Foreground="White" BorderBrush="#555" Margin="0,0,8,0"/>
                     <Button x:Name="BtnClearRanges" Content="清空列表" Width="80" Height="24" Background="#555" Foreground="White" BorderBrush="#555"/>
                     <TextBlock x:Name="TxtRangeCount" Foreground="#888" VerticalAlignment="Center" Margin="12,0,0,0" Text="共 0 个片段"/>
@@ -339,16 +407,6 @@ $xaml = @'
                         Foreground="#0E639C" Background="#2D2D2D" BorderBrush="#555"/>
             <TextBlock Grid.Column="2" x:Name="TxtProgress" Text="就绪" Foreground="#888" VerticalAlignment="Center"/>
         </Grid>
-
-        <!-- 日志 -->
-        <Border Grid.Row="8" Background="#1A1A1A" CornerRadius="4" Height="120">
-            <RichTextBox x:Name="OutputLog" Background="#1A1A1A" Foreground="#D4D4D4" BorderThickness="0"
-                        IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12">
-                <RichTextBox.Resources>
-                    <Style TargetType="Paragraph"><Setter Property="Margin" Value="0,1,0,1"/></Style>
-                </RichTextBox.Resources>
-            </RichTextBox>
-        </Border>
     </Grid>
 </ScrollViewer>
 '@
@@ -376,7 +434,6 @@ $script:chkFastCopy = $ui.FindName("ChkFastCopy")
 $script:btnExecute = $ui.FindName("BtnExecute")
 $script:pgbProgress = $ui.FindName("PgbProgress")
 $script:txtProgress = $ui.FindName("TxtProgress")
-$script:outputLog = $ui.FindName("OutputLog")
 $script:txtFFplayHint = $ui.FindName("TxtFFplayHint")
 $script:btnSetStart = $ui.FindName("BtnSetStart")
 $script:btnSetEnd = $ui.FindName("BtnSetEnd")
@@ -387,6 +444,11 @@ $script:txtSliderMax = $ui.FindName("TxtSliderMax")
 $script:cmbScale = $ui.FindName("CmbScale")
 $script:txtCustomWidth = $ui.FindName("TxtCustomWidth")
 $script:txtScaleHint = $ui.FindName("TxtScaleHint")
+$script:cmbOutputFormat = $ui.FindName("CmbOutputFormat")
+$script:panelGif = $ui.FindName("PanelGif")
+$script:cmbGifPreset = $ui.FindName("CmbGifPreset")
+$script:txtGifWidth = $ui.FindName("TxtGifWidth")
+$script:txtGifFps = $ui.FindName("TxtGifFps")
 
 # ---------- 初始化 ----------
 Find-FFmpeg
@@ -394,32 +456,13 @@ $script:txtOutputDir.Text = $script:OutputDir
 $script:txtFFplayHint.Text = if ($script:MPVPath) { "mpv: 已检测到" } else { "未找到 mpv.exe（lib\\mpv-x86_64-v3）" }
 
 # ---------- 日志函数 ----------
-function Write-Log {
+# 委托给 Write-ToolLog: 嵌入模式(Main.ps1 加载)→ 全局 OutputLog
+#                       独立模式 → _logs/audioVedioTools_yyyyMMdd.log (见顶部 fallback)
+# 注意: 函数名不能用 Write-Log, 否则 dot-source 加载时会覆盖 Main.ps1 的同名全局函数,
+#       导致 Write-ToolLog -> Write-Log -> Write-ToolLog 无限递归 (CallDepthOverflow)。
+function Write-AvtLog {
     param([string]$Message, [string]$Type = "Info")
-    $colors = @{ Info = "#D4D4D4"; Warning = "#E8B830"; Error = "#E81123"; Success = "#16C60C"; Cmd = "#569CD6" }
-    $color = $colors[$Type]
-    $time = Get-Date -Format "HH:mm:ss"
-    $line = "[$time] $Message"
-
-    if ($script:outputLog.Dispatcher.CheckAccess()) {
-        $p = [System.Windows.Documents.Paragraph]::new()
-        $r = [System.Windows.Documents.Run]::new($line)
-        $r.Foreground = if ($color) { [System.Windows.Media.BrushConverter]::new().ConvertFromString($color) } else { [System.Windows.Media.Brushes]::Gray }
-        $p.Inlines.Add($r)
-        $script:outputLog.Document.Blocks.Add($p)
-        $script:outputLog.ScrollToEnd()
-    }
-    else {
-        $script:outputLog.Dispatcher.Invoke([Action] {
-                $p = [System.Windows.Documents.Paragraph]::new()
-                $r = [System.Windows.Documents.Run]::new($line)
-                $r.Foreground = if ($color) { [System.Windows.Media.BrushConverter]::new().ConvertFromString($color) } else { [System.Windows.Media.Brushes]::Gray }
-                $p.Inlines.Add($r)
-                $script:outputLog.Document.Blocks.Add($p)
-                $script:outputLog.ScrollToEnd()
-            })
-    }
-    Write-Host $line
+    Write-ToolLog $Message $Type
 }
 
 # ---------- 文件选择 ----------
@@ -507,7 +550,10 @@ function Get-ScaleFilter {
     else {
         $w = $presetWidths[$idx]
     }
-    return "scale=${w}:-2:force_original_aspect_ratio=decrease"
+    # 仅指定宽度, -2 会让高度向下取整到偶数 (libx264 要求尺寸为 2 的倍数)。
+    # 不要加 force_original_aspect_ratio=decrease: 它会在只给宽度时先算出奇数高度,
+    # 与 -2 的偶数取整冲突, 导致 "height not divisible by 2" 报错。
+    return "scale=${w}:-2"
 }
 
 function Update-ScaleHint {
@@ -709,17 +755,42 @@ function Execute-VideoExtract {
     $success = 0
     $failed = 0
 
+    # 输出格式: 0=视频(原格式), 1=GIF 动图
+    $isGif = ($script:cmbOutputFormat.SelectedIndex -eq 1)
+    if ($isGif) {
+        # 解析 GIF 宽度/帧率 (非法输入回退默认)
+        $gifW = 480; if ($script:txtGifWidth.Text -match '^\d+$' -and [int]$script:txtGifWidth.Text -gt 0) { $gifW = [int]$script:txtGifWidth.Text }
+        $gifFps = 10; if ($script:txtGifFps.Text -match '^\d+$' -and [int]$script:txtGifFps.Text -gt 0) { $gifFps = [int]$script:txtGifFps.Text }
+        if ($gifW % 2 -ne 0) { $gifW += 1 }   # 宽度取偶, 避免 GIF 尺寸异常
+        & $script:fnWriteLog "输出格式: GIF (宽 $gifW, 帧率 $gifFps)" -Type Info
+    }
+    else {
+        & $script:fnWriteLog "输出格式: 视频 (原格式)" -Type Info
+    }
+
     for ($i = 0; $i -lt $total; $i++) {
         $range = $script:TimeRanges[$i]
-        $ext = [System.IO.Path]::GetExtension($script:SelectedFile)
-        if (-not $ext) { $ext = ".mp4" }
+        if ($isGif) {
+            $ext = ".gif"
+        }
+        else {
+            $ext = [System.IO.Path]::GetExtension($script:SelectedFile)
+            if (-not $ext) { $ext = ".mp4" }
+        }
         $outPath = Join-Path $clipDir "$($range.OutputName)$ext"
         $finalPath = & $script:fnResolveFileConflict $outPath
         if (-not $finalPath) { continue }
 
         & $script:fnWriteLog "[$($i+1)/$total] $($range.OutputName): $($range.Start) -> $($range.End)" -Type Info
 
-        if ($script:chkFastCopy.IsChecked) {
+        if ($isGif) {
+            # GIF 动图: palettegen + paletteuse 生成高质量调色板 (单条 filtergraph)
+            # fps 控制帧率, scale 控制宽度(高度自动偶数), lanczos 提升清晰度
+            $gifFilter = "fps=$gifFps,scale=$gifW`:-2:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse"
+            # 输入级 seek (-ss/-to 在 -i 前) 速度更快; GIF 必然重编码
+            $ffArgs = @("-ss", $range.StartSec, "-to", $range.EndSec, "-i", "`"$script:SelectedFile`"", "-vf", $gifFilter, "-loop", "0")
+        }
+        elseif ($script:chkFastCopy.IsChecked) {
             # 快速模式：-ss -to 在 -i 前（输入级跳转，最快，但不支持 -vf）
             # ffmpeg -ss 6163 -to 6477 -i "$path\xx.mkv" -c copy -avoid_negative_ts make_zero "$targetPth/xx.mkv"
             $ffArgs = @("-ss", $range.StartSec, "-to", $range.EndSec, "-i", "`"$script:SelectedFile`"", "-c", "copy", "-avoid_negative_ts", "make_zero")
@@ -1069,7 +1140,7 @@ $script:fnConvertToTimeString = (Get-Command ConvertTo-TimeString).ScriptBlock
 $script:fnExecuteAudioExtract = (Get-Command Execute-AudioExtract).ScriptBlock
 $script:fnExecuteVideoExtract = (Get-Command Execute-VideoExtract).ScriptBlock
 $script:fnResolveFileConflict = (Get-Command Resolve-FileConflict).ScriptBlock
-$script:fnWriteLog = (Get-Command Write-Log).ScriptBlock
+$script:fnWriteLog = (Get-Command Write-ToolLog).ScriptBlock
 $script:fnGetScaleFilter = (Get-Command Get-ScaleFilter).ScriptBlock
 $script:fnUpdateScaleHint = (Get-Command Update-ScaleHint).ScriptBlock
 
@@ -1096,6 +1167,34 @@ $script:cmbScale.Add_SelectionChanged({ & $script:fnUpdateScaleHint })
 $script:txtCustomWidth.Add_TextChanged({ & $script:fnUpdateScaleHint })
 $script:chkFastCopy.Add_Checked({ & $script:fnUpdateScaleHint })
 $script:chkFastCopy.Add_Unchecked({ & $script:fnUpdateScaleHint })
+
+# 输出格式切换: GIF 需重编码, 自动关闭并禁用「快速模式」
+$script:cmbOutputFormat.Add_SelectionChanged({
+    $isGif = ($script:cmbOutputFormat.SelectedIndex -eq 1)
+    $script:panelGif.Visibility = if ($isGif) { "Visible" } else { "Collapsed" }
+    if ($isGif) {
+        $script:chkFastCopy.IsChecked = $false
+        $script:chkFastCopy.IsEnabled = $false
+        & $script:fnUpdateScaleHint
+    }
+    else {
+        $script:chkFastCopy.IsEnabled = $true
+    }
+})
+
+# GIF 尺寸预设: 0=小 1=中 2=大 (宽度/帧率). 切换时自动填充, 用户仍可手动微调。
+$script:GifPresets = @(
+    @{ Width = 320; Fps = 8  }   # 小
+    @{ Width = 480; Fps = 10 }   # 中
+    @{ Width = 720; Fps = 12 }   # 大
+)
+$script:cmbGifPreset.Add_SelectionChanged({
+    $idx = $script:cmbGifPreset.SelectedIndex
+    if ($idx -lt 0 -or $idx -gt 2) { $idx = 1 }
+    $p = $script:GifPresets[$idx]
+    $script:txtGifWidth.Text = $p.Width.ToString()
+    $script:txtGifFps.Text   = $p.Fps.ToString()
+})
 
 $ui.FindName("BtnAddRange").Add_Click({ & $script:fnAddRange })
 $ui.FindName("BtnRemoveRange").Add_Click({ & $script:fnRemoveSelectedRanges })
