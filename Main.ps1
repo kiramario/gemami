@@ -232,7 +232,8 @@ function Initialize-TreeView {
             $childNode.Add_Selected({
                     $sender = $args[0]
                     Write-Log ("选中: {0}" -f $sender.Header) -Type Info
-                    Set-Tool -Window $Window -ToolConfig $sender.Tag
+                    # 回调触发时函数的局部变量/参数可能已失效, 用 $Global:MainWindow(同一窗口对象)
+                    Set-Tool -Window $Global:MainWindow -ToolConfig $sender.Tag
                 })
             
             $parentNode.Items.Add($childNode)
@@ -294,7 +295,25 @@ function Set-Tool {
         }
     }
     catch {
-        Write-Log "[Set-Tool]加载工具失败: $($_.Exception.Message)" -Type Error
+        # ★ XAML 解析失败时, 外层消息往往是"设置属性 XXX 时引发了异常"这类包装信息,
+        #   真正原因在 InnerException 里。必须一并打印, 否则无法定位问题。
+        Write-Log ("[Set-Tool]加载工具失败: " + $ToolConfig.Script) -Type Error
+        Write-Log ("  外层: " + $_.Exception.Message) -Type Error
+        $inner = $_.Exception.InnerException
+        $level = 0
+        while ($inner -and $level -lt 5) {
+            Write-Log ("  内层[$level]: " + $inner.Message) -Type Error
+            $inner = $inner.InnerException
+            $level++
+        }
+        if ($_.InvocationInfo) {
+            Write-Log ("  位置: " + $_.InvocationInfo.ScriptName + ':' + $_.InvocationInfo.ScriptLineNumber) -Type Error
+            if ($_.InvocationInfo.Line) { Write-Log ("  代码: " + $_.InvocationInfo.Line.Trim()) -Type Error }
+        }
+        if ($_.ScriptStackTrace) {
+            $frames = @($_.ScriptStackTrace -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -First 5)
+            Write-Log ("  堆栈: " + ($frames -join ' | ')) -Type Error
+        }
     }
 }
 
@@ -417,58 +436,63 @@ function Register-Events {
         })
     
     # 全屏切换
-    $btnFullscreen = $Window.FindName("BtnFullscreen")
-    $btnFullscreen.Add_Click({
-            if ($script:IsFullscreen) {
-                # 退出全屏
-                $Global:MainWindow.WindowState = "Normal"
-                $Global:MainWindow.Topmost = $false
-                $Global:MainWindow.Left = $script:LastRect.Left
-                $Global:MainWindow.Top = $script:LastRect.Top
-                $Global:MainWindow.Width = $script:LastRect.Width
-                $Global:MainWindow.Height = $script:LastRect.Height
-                $btnFullscreen.Content = "⛶"
-                $script:IsFullscreen = $false
-            }
-            else {
-                # 进入全屏
-                $script:LastRect.Left = $Global:MainWindow.Left
-                $script:LastRect.Top = $Global:MainWindow.Top
-                $script:LastRect.Width = $Global:MainWindow.Width
-                $script:LastRect.Height = $Global:MainWindow.Height
-                $Global:MainWindow.WindowState = "Maximized"
-                $Global:MainWindow.Topmost = $true
-                $btnFullscreen.Content = "⛷"
-                $script:IsFullscreen = $true
-            }
-        })
+    # ★ 注意: 回调是在 Register-Events 返回之后才触发的, 此时函数局部作用域已回收,
+    #   局部变量($btnFullscreen 等)会变成 $null, 对其赋属性会报
+    #   "在此对象上找不到属性 Content"。因此必须存到 $script: 作用域。
+    $script:btnFullscreen = $Window.FindName("BtnFullscreen")
+    $script:btnFullscreen.Add_Click({
+        if ($script:IsFullscreen) {
+            # 退出全屏
+            $Global:MainWindow.WindowState = "Normal"
+            $Global:MainWindow.Topmost = $false
+            $Global:MainWindow.Left = $script:LastRect.Left
+            $Global:MainWindow.Top = $script:LastRect.Top
+            $Global:MainWindow.Width = $script:LastRect.Width
+            $Global:MainWindow.Height = $script:LastRect.Height
+            if ($script:btnFullscreen) { $script:btnFullscreen.Content = "⛶" }
+            $script:IsFullscreen = $false
+        }
+        else {
+            # 进入全屏
+            $script:LastRect.Left = $Global:MainWindow.Left
+            $script:LastRect.Top = $Global:MainWindow.Top
+            $script:LastRect.Width = $Global:MainWindow.Width
+            $script:LastRect.Height = $Global:MainWindow.Height
+            $Global:MainWindow.WindowState = "Maximized"
+            $Global:MainWindow.Topmost = $true
+            if ($script:btnFullscreen) { $script:btnFullscreen.Content = "⛷" }
+            $script:IsFullscreen = $true
+        }
+    })
     
     # ESC 退出全屏
     $Window.Add_KeyDown({
-            if ($_.Key -eq "Escape" -and $script:IsFullscreen) {
-                $Global:MainWindow.WindowState = "Normal"
-                $Global:MainWindow.Topmost = $false
-                $Global:MainWindow.Left = $script:LastRect.Left
-                $Global:MainWindow.Top = $script:LastRect.Top
-                $Global:MainWindow.Width = $script:LastRect.Width
-                $Global:MainWindow.Height = $script:LastRect.Height
-                $btnFullscreen.Content = "⛶"
-                $script:IsFullscreen = $false
-            }
-        })
+        if ($_.Key -eq "Escape" -and $script:IsFullscreen) {
+            $Global:MainWindow.WindowState = "Normal"
+            $Global:MainWindow.Topmost = $false
+            $Global:MainWindow.Left = $script:LastRect.Left
+            $Global:MainWindow.Top = $script:LastRect.Top
+            $Global:MainWindow.Width = $script:LastRect.Width
+            $Global:MainWindow.Height = $script:LastRect.Height
+            if ($script:btnFullscreen) { $script:btnFullscreen.Content = "⛶" }
+            $script:IsFullscreen = $false
+        }
+    })
     
     # 搜索框
-    $searchBox = $Window.FindName("SearchBox")
-    $searchBox.Add_TextChanged({
-            $placeholder = $Window.FindName("SearchPlaceholder")
-            if ($searchBox.Text.Length -gt 0) {
-                $placeholder.Visibility = [System.Windows.Visibility]::Collapsed
-            }
-            else {
-                $placeholder.Visibility = [System.Windows.Visibility]::Visible
-            }
-            Find-Tools -Window $Window -Keyword $searchBox.Text
-        })
+    # 同样原因: 回调里不能引用局部变量, 统一走 $script: 作用域
+    $script:searchBox = $Window.FindName("SearchBox")
+    $script:searchPlaceholder = $Window.FindName("SearchPlaceholder")
+    $script:searchBox.Add_TextChanged({
+        if (-not $script:searchBox -or -not $script:searchPlaceholder) { return }
+        if ($script:searchBox.Text.Length -gt 0) {
+            $script:searchPlaceholder.Visibility = [System.Windows.Visibility]::Collapsed
+        }
+        else {
+            $script:searchPlaceholder.Visibility = [System.Windows.Visibility]::Visible
+        }
+        Find-Tools -Window $Global:MainWindow -Keyword $script:searchBox.Text
+    })
 
     # 主题切换（$args[0] = ComboBox 自身）
     $cmbTheme = $Window.FindName("CmbTheme")
@@ -505,13 +529,13 @@ function Register-WelcomeCards {
             $cardBorder.Add_MouseLeftButtonDown({
                     if ($cardTag) {
                         # 在 TreeView 中查找对应工具并选中
-                        $tree = $Window.FindName("ToolTree")
+                        $tree = $Global:MainWindow.FindName("ToolTree")
                         foreach ($parentNode in $tree.Items) {
                             foreach ($child in $parentNode.Items) {
                                 $cfg = $child.Tag
                                 if ($cfg -and $cfg.Name -eq $cardTag) {
                                     $child.IsSelected = $true
-                                    Set-Tool -Window $Window -ToolConfig $cfg
+                                    Set-Tool -Window $Global:MainWindow -ToolConfig $cfg
                                     return
                                 }
                             }
@@ -522,13 +546,13 @@ function Register-WelcomeCards {
             if ($cardBorder.Child -is [System.Windows.Controls.Panel]) {
                 $cardBorder.Child.Add_MouseLeftButtonDown({
                         if ($cardTag) {
-                            $tree = $Window.FindName("ToolTree")
+                            $tree = $Global:MainWindow.FindName("ToolTree")
                             foreach ($parentNode in $tree.Items) {
                                 foreach ($child in $parentNode.Items) {
                                     $cfg = $child.Tag
                                     if ($cfg -and $cfg.Name -eq $cardTag) {
                                         $child.IsSelected = $true
-                                        Set-Tool -Window $Window -ToolConfig $cfg
+                                        Set-Tool -Window $Global:MainWindow -ToolConfig $cfg
                                         return
                                     }
                                 }

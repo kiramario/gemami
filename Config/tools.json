@@ -56,11 +56,25 @@
         "Description": "提取音频，按时间段批量提取视频片段，支持 ffplay 预览"
     },
     {
+        "Name": "视频瘦身",
+        "Icon": "📉",
+        "Category": "媒体工具",
+        "Script": "VideoSlim.ps1",
+        "Description": "读取视频信息，按 4 组场景或自定义编码参数批量压缩视频，可批量处理文件夹"
+    },
+    {
         "Name": "批量解压",
         "Icon": "🗜️",
         "Category": "文件工具",
         "Script": "ArchiveBatchExtract.ps1",
         "Description": "批量解压文件夹内所有压缩文件，支持多密码逐个尝试，可指定输出路径"
+    },
+    {
+        "Name": "极限归档",
+        "Icon": "🗄️",
+        "Category": "文件工具",
+        "Script": "ExtremeArchive.ps1",
+        "Description": "用 AV1 把多个视频批量压到最小体积，专用于长期归档，不在乎编码耗时只追求压缩率"
     },
     {
         "Name": "进程快照",

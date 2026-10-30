@@ -45,6 +45,7 @@ $script:SelectedFile = $null
 $script:OutputDir = Join-Path $env:USERPROFILE "Desktop"
 $script:TimeRanges = [System.Collections.ArrayList]::new()
 $script:FFmpegPath = $null
+$script:FFprobePath = $null
 $script:MPVPath = $null
 $script:MPVProcess = $null
 $script:MPVTimer = $null
@@ -61,6 +62,9 @@ function Find-FFmpeg {
     # 查找 ffmpeg
     $ffmpegPath = Join-Path $libDir "ffmpeg.exe"
     if (Test-Path $ffmpegPath) { $script:FFmpegPath = $ffmpegPath }
+    # 查找 ffprobe(可选, 用于精确读取时长)
+    $ffprobePath = Join-Path $libDir "ffprobe.exe"
+    if (Test-Path $ffprobePath) { $script:FFprobePath = $ffprobePath }
     # 查找 mpv
     $mpvDir = Join-Path $libDir "mpv-x86_64-v3"
     if (Test-Path $mpvDir) {
@@ -107,6 +111,49 @@ function ConvertTo-TimeString {
     $m = [math]::Floor(($TotalSeconds % 3600) / 60)
     $s = $TotalSeconds % 60
     return ("{0:D2}:{1:D2}:{2:D2}" -f [int]$h, [int]$m, [int][math]::Round($s, 2))
+}
+
+# ---------- 获取视频时长(秒) ----------
+# 优先 ffprobe(JSON); 没有 ffprobe 时回退 ffmpeg -i 解析 stderr。
+# 两者都用 ProcessStartInfo 读流, 避免 2>&1 在 $ErrorActionPreference='Stop' 下
+# 把 stderr 变成终止性错误 (NativeCommandError)。
+function Get-Duration {
+    param([string]$Path)
+    # ffprobe
+    if ($script:FFprobePath) {
+        try {
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName = $script:FFprobePath
+            $psi.Arguments = '-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "' + $Path + '"'
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.CreateNoWindow = $true
+            $p = [System.Diagnostics.Process]::Start($psi)
+            $so = $p.StandardOutput.ReadToEnd()
+            [void]$p.StandardError.ReadToEnd()
+            $p.WaitForExit()
+            $txt = $so.Trim()
+            if ($p.ExitCode -eq 0 -and $txt) { return [double]$txt }
+        }
+        catch { }
+    }
+    # ffmpeg 回退
+    $psi2 = New-Object System.Diagnostics.ProcessStartInfo
+    $psi2.FileName = $script:FFmpegPath
+    $psi2.Arguments = '-i "' + $Path + '"'
+    $psi2.UseShellExecute = $false
+    $psi2.RedirectStandardError = $true
+    $psi2.RedirectStandardOutput = $true
+    $psi2.CreateNoWindow = $true
+    $p2 = [System.Diagnostics.Process]::Start($psi2)
+    $out = $p2.StandardError.ReadToEnd()
+    [void]$p2.StandardOutput.ReadToEnd()
+    $p2.WaitForExit()
+    if ($out -match 'Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)') {
+        return [double]$Matches[1] * 3600 + [double]$Matches[2] * 60 + [double]$Matches[3]
+    }
+    return 0
 }
 
 # ========== XAML 界面 ==========
@@ -660,16 +707,14 @@ function QuickAdd-Range {
         return
     }
     try {
-        $output = & $script:FFmpegPath -i $script:SelectedFile 2>&1 | Out-String
-        $m = [regex]::Match($output, 'Duration:\s*(\d+:\d+:\d+)')
-        if (-not $m.Success) {
+        $duration = & $script:fnGetDuration $script:SelectedFile
+        if (-not $duration -or $duration -le 0) {
             & $script:fnWriteLog "无法获取视频时长" -Type Warning
             return
         }
-        $duration = & $script:fnConvertToSeconds $m.Groups[1].Value
     }
     catch {
-        & $script:fnWriteLog "无法获取视频时长" -Type Warning
+        & $script:fnWriteLog "无法获取视频时长: $($_.Exception.Message)" -Type Warning
         return
     }
 
@@ -1137,6 +1182,7 @@ $script:fnInvokeExecute = (Get-Command Invoke-Execute).ScriptBlock
 $script:fnRefreshRangeList = (Get-Command Refresh-RangeList).ScriptBlock
 $script:fnConvertToSeconds = (Get-Command ConvertTo-Seconds).ScriptBlock
 $script:fnConvertToTimeString = (Get-Command ConvertTo-TimeString).ScriptBlock
+$script:fnGetDuration = (Get-Command Get-Duration).ScriptBlock
 $script:fnExecuteAudioExtract = (Get-Command Execute-AudioExtract).ScriptBlock
 $script:fnExecuteVideoExtract = (Get-Command Execute-VideoExtract).ScriptBlock
 $script:fnResolveFileConflict = (Get-Command Resolve-FileConflict).ScriptBlock
@@ -1225,7 +1271,7 @@ $script:sldProgress.Add_PreviewMouseLeftButtonUp({
 
 # ========== 返回或显示 ==========
 if ($Global:MainWindow) {
-    & $script:fnWriteLog "audioVedioTools v1.0 已加载" -Type Success
+    & $script:fnWriteLog "audioVedioTools v1.4 已加载 (ffprobe+GIF预设+时间简写)" -Type Success
     return $ui
 }
 else {
